@@ -46,7 +46,7 @@ class HiddenMarkovModel:
     def __init__(self, A, O):
         '''
         Initializes an HMM. Assumes the following:
-            - States and observations are integers starting from 0. 
+            - States and observations are integers starting from 0.
             - There is a start state (see notes on A_start below). There
               is no integer associated with the start state, only
               probabilities in the vector A_start.
@@ -77,13 +77,13 @@ class HiddenMarkovModel:
         self.O = np.array(O)
         self.A_start = np.array([1. / self.L for i in range(self.L)])
 
-        
+
     def normal(self, array):
         return ([float(i)/sum(array) for i in array])
-        
+
     def viterbi(self, x):
         '''
-        Uses the Viterbi algorithm to find the max probability state 
+        Uses the Viterbi algorithm to find the max probability state
         sequence corresponding to a given input sequence.
 
         Arguments:
@@ -103,7 +103,7 @@ class HiddenMarkovModel:
         # For instance, probs[1][0] is the probability of the prefix of
         # length 1 ending in state 0.
         probs = np.zeros((M + 1, self.L))
-        seqs = np.zeros((M + 1, self.L), 'int')   
+        seqs = np.zeros((M + 1, self.L), 'int')
 
         # initial guess
         probs[1,:] = self.A_start * self.O[:,x[0]]
@@ -112,7 +112,7 @@ class HiddenMarkovModel:
         for i in range(2, M + 1):
             for s in range(self.L):
                 prob_choices = probs[i-1,:]*self.A[:, s]*self.O[s, x[i - 1]]
-                
+
                 # pick the highest probability one
                 best = np.argmax(prob_choices)
                 probs[i, s] = prob_choices[best]
@@ -148,7 +148,7 @@ class HiddenMarkovModel:
         '''
         M = len(x)      # Length of sequence.
         alphas = np.zeros((M + 1, self.L))
-        
+
         # initialize
         alphas[1,:] = self.A_start * self.O[:,x[0]]
         if (normalize==True):
@@ -208,7 +208,7 @@ class HiddenMarkovModel:
             betas[0][s] = subsum
         if (normalize==True):
             betas[0,:] = self.normal(betas[0,:])
-        
+
         return(betas)
 
     def supervised_learning(self, X, Y):
@@ -220,11 +220,11 @@ class HiddenMarkovModel:
 
         Arguments:
             X:          A dataset consisting of input sequences in the form
-                        of lists of variable length, consisting of integers 
+                        of lists of variable length, consisting of integers
                         ranging from 0 to D - 1. In other words, a list of
                         lists.
             Y:          A dataset consisting of state sequences in the form
-                        of lists of variable length, consisting of integers 
+                        of lists of variable length, consisting of integers
                         ranging from 0 to L - 1. In other words, a list of
                         lists.
                         Note that the elements in X line up with those in Y.
@@ -278,8 +278,8 @@ class HiddenMarkovModel:
                         of lists of length M, consisting of integers ranging
                         from 0 to D - 1. In other words, a list of lists.
         '''
-        
-        # calculate (6) in HMM notes        
+
+        # calculate (6) in HMM notes
         def calcGammaTable(alpha, beta, length):
             output = np.zeros((self.L, length),float)
             for j in range(length):
@@ -287,7 +287,7 @@ class HiddenMarkovModel:
                 denom = np.dot(alpha[j+1,:],beta[j+1,:])
                 output[:,j] = numerator/denom
             return(output)
-        
+
         # calculates (7) in HMM notes
         def calcIotaTable(alpha, beta, x):
             output = np.zeros((self.L, self.L, len(x)-1),float)
@@ -300,7 +300,7 @@ class HiddenMarkovModel:
                         denom += output[a,b,j]
                 output2[j] = denom
             return(output, output2)
-        
+
         # calculates (14) in HMM notes
         def newTransition(a, b, sub_x, alpha, beta):
             numerator = sum(self.iota_output[a,b,:]/self.iota_denom[:])
@@ -311,13 +311,13 @@ class HiddenMarkovModel:
             indices = np.where(np.array(sub_x) == w)[0]
             numerator = sum([self.gamma_output[a,j] for j in indices])
             return (numerator)
-        
+
         # initialize
         A_top = np.zeros((self.L,self.L),float)
         A_bot = np.zeros((self.L,self.L),float)
         O_top = np.zeros((self.L,self.D),float)
         O_bot = np.zeros((self.L,self.D),float)
-        
+
         # run through all the half-year dates
         for num in range(len(X)):
             sub_x = X[num]
@@ -325,11 +325,11 @@ class HiddenMarkovModel:
             beta = self.backward(sub_x, True)
             self.gamma_output = calcGammaTable(alpha, beta, len(sub_x))
             (self.iota_output, self.iota_denom) = calcIotaTable(alpha, beta, sub_x)
-            
+
             # run through the different states
             for i in range(self.L):
                 denom = sum(self.gamma_output[i,:-1])
-      
+
                 # new transition matrix A
                 for j in range(self.L):
                     A_top[i,j] += newTransition(i,j,sub_x, alpha, beta)
@@ -352,7 +352,7 @@ class HiddenMarkovModel:
     def generate_emission(self, M):
         '''
         Generates an emission of length M, assuming that the starting state
-        is chosen uniformly at random. 
+        is chosen uniformly at random.
 
         Arguments:
             M:          Length of the emission to generate.
@@ -424,7 +424,7 @@ def supervised_HMM(X, Y):
     the training function for supervised learing.
 
     Arguments:
-        X:          A list of variable length emission sequences 
+        X:          A list of variable length emission sequences
         Y:          A corresponding list of variable length state sequences
                     Note that the elements in X line up with those in Y
     '''
@@ -437,7 +437,7 @@ def supervised_HMM(X, Y):
     states = set()
     for y in Y:
         states |= set(y)
-    
+
     # Compute L and D.
     L = len(states)
     D = len(observations)
@@ -449,7 +449,7 @@ def supervised_HMM(X, Y):
         norm = sum(A[i])
         for j in range(len(A[i])):
             A[i][j] /= norm
-    
+
     O = [[random.random() for i in range(D)] for j in range(L)]
 
     for i in range(len(O)):
@@ -472,7 +472,7 @@ def unsupervised_HMM(X, n_states):
 
     Arguments:
         X:          A dataset consisting of input sequences in the form
-                    of lists of variable length, consisting of integers 
+                    of lists of variable length, consisting of integers
                     ranging from 0 to D - 1. In other words, a list of lists.
         n_states:   Number of hidden states to use in training.
     '''
@@ -480,7 +480,7 @@ def unsupervised_HMM(X, n_states):
     observations = set()
     for x in X:
         observations |= set(x)
-    
+
     # Compute L and D.
     L = n_states
     D = len(observations)
@@ -492,7 +492,7 @@ def unsupervised_HMM(X, n_states):
         norm = sum(A[i])
         for j in range(len(A[i])):
             A[i][j] /= norm
-    
+
     O = [[random.random() for i in range(D)] for j in range(L)]
 
     for i in range(len(O)):
@@ -504,10 +504,10 @@ def unsupervised_HMM(X, n_states):
     HMM = HiddenMarkovModel(A, O)
 
     start = time.time()
-    for i in range(1000):
+    for i in range(1):
         print(i)
         HMM.unsupervised_learning(X)
-    
+
     end = time.time()
     print('time:' ,end - start)
 
